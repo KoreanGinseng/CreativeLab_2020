@@ -46,6 +46,7 @@ struct OutputVS
 {
 	float4 pos    : SV_POSITION;
 	float3 normal : NORMAL;
+	float2 tex    : TEXCOORD0;
 };
 
 //! 頂点シェーダ
@@ -57,6 +58,9 @@ OutputVS RenderVS(InputVS inVert)
 	float4 Pos     = mul(inVert.pos, mtxWorld);
 	outVert.pos    = mul(       Pos,    mtxVP);
 	outVert.normal = normalize(mul(inVert.normal, (float3x3)mtxWorld));
+
+	outVert.tex    = inVert.tex;
+
 	return outVert;
 }
 
@@ -74,7 +78,7 @@ float4 RenderPS(OutputVS inPixel) : SV_TARGET
 	// 最終的な色として、エミッシブ＋環境光＋拡散反射光の値が 0 ~ 1 の範囲のなるよう計算。
 	float4 LP   = float4(saturate(matEmissive.xyz + amb + diff), matDiffuse.w);
 	
-	return LP; //RGBA で色を指定
+	return LP * txDiffuse.Sample(samLinear, inPixel.tex); //RGBA で色を指定
 }
 
 technique11 TShader
