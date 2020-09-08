@@ -45,6 +45,7 @@ struct OutputVS
 {
 	float4	pos			: SV_POSITION;
 	float2	Tex			: TEXCOORD0;
+	float   height      : TEXCOORD1;
 };
 
 //! 新規のコンスタントバッファ作成
@@ -64,7 +65,8 @@ OutputVS RenderVS( InputVS inVert )
 	OutputVS	outVert;
 
 	matrix	mtxVP = mul( mtxView, mtxProj );
-	float4 Pos = mul( inVert.pos + float4(0, sin(cbTime.x + inVert.pos.x), 0, 1), mtxWorld );
+	outVert.height = sin(cbTime.x + inVert.pos.x * 5);
+	float4 Pos = mul( inVert.pos + float4(0, outVert.height * 0.7f, 0, 1), mtxWorld );
 	outVert.pos = mul( Pos , mtxVP );
 
 	outVert.Tex = inVert.Tex;
@@ -75,11 +77,10 @@ OutputVS RenderVS( InputVS inVert )
 float4 RenderPS( OutputVS inPixel ) : SV_TARGET
 {
 	//フレンド率（U位置 + sin(time))をそのままブレンド率とする）
-	//float bld = clamp(inPixel.Tex.x + sin(cbTime.x), 0, 1);
-	float bld = clamp(inPixel.Tex.x + sin(cbTime.x), 0, 1);
+	float bld = clamp(inPixel.height, 0, 1);
 	//2枚のテクスチャを線形補間で色を求める
-	return lerp(txImage1.Sample(samLinear, inPixel.Tex),
-		txImage2.Sample(samLinear, inPixel.Tex), bld);
+	return lerp(txImage2.Sample(samLinear, inPixel.Tex),
+		txImage1.Sample(samLinear, inPixel.Tex), bld);
 }
 
 technique11 TShader
