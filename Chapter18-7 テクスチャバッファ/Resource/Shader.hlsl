@@ -64,8 +64,8 @@ OutputVS RenderVS( InputVS inVert )
 	OutputVS	outVert;
 
 	matrix	mtxVP = mul( mtxView, mtxProj );
-	float4 Pos = mul( inVert.pos, mtxWorld );
-	outVert.pos = mul( Pos , mtxVP );
+	float4 Pos = mul( inVert.pos + float4(0, sin(cbTime.x), 0, 1), mtxWorld );
+	outVert.pos = mul( Pos, mtxVP );
 
 	outVert.Tex = inVert.Tex;
 	return outVert;
@@ -74,11 +74,13 @@ OutputVS RenderVS( InputVS inVert )
 //! ピクセルシェーダ
 float4 RenderPS( OutputVS inPixel ) : SV_TARGET
 {
+	float4 re;
 	//フレンド率（U位置 + sin(time))をそのままブレンド率とする）
 	float bld = clamp(inPixel.Tex.x + sin(cbTime.x), 0, 1);
 	//2枚のテクスチャを線形補間で色を求める
-	return lerp(txImage1.Sample(samLinear, inPixel.Tex),
+	re = lerp(txImage1.Sample(samLinear, inPixel.Tex),
 		txImage2.Sample(samLinear, inPixel.Tex), bld);
+	return re;
 }
 
 technique11 TShader
